@@ -1,0 +1,34 @@
+<?php
+
+// $test = \Drupal\field\Entity\FieldConfig::loadByName('node', 'article', 'body');
+
+function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $form_object = $form_state->getFormObject();
+  if (is_a($form_object, 'Drupal\Core\Entity\EntityForm') && $entity = $form_object->getEntity()) {
+    foreach (\Drupal\Core\Render\Element::children($form) as $field) {
+      if(is_array($form[$field]['widget'])) {
+        foreach (\Drupal\Core\Render\Element::children($form[$field]['widget']) as $delta) {
+          if (isset($form[$field]['widget'][$delta]['#description']) && $build = _field_help_helper_add_description_contextual_links($entity, $field, $form[$field]['widget'][$delta]['#description'])) {
+            $form[$field]['widget'][$delta]['#description'] = $build;
+          }
+        }
+      }
+    }
+  }
+}
+
+function _field_help_helper_add_description_contextual_links(\Drupal\Core\Entity\EntityInterface $entity, $field_name, $description_text) {
+  $build = array();
+
+  $type = $entity->getEntityTypeId();
+  $bundle = $entity->bundle();
+
+  if ($field_config = \Drupal\field\Entity\FieldConfig::loadByName($type, $bundle, $field_name)) {
+    $build = array(
+      'description_text' => array('#markup' => $description_text),
+      'link' => array('#markup' => '<a href="/">Edit field help text</a>'),
+    );
+  }
+
+  return $build;
+}
