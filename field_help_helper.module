@@ -1,8 +1,11 @@
 <?php
 
-// $test = \Drupal\field\Entity\FieldConfig::loadByName('node', 'article', 'body');
-
 function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $account = \Drupal::currentUser();
+  if (!$account->hasPermission('edit field help text')) {
+    return;
+  }
+
   $form_object = $form_state->getFormObject();
   if (is_a($form_object, 'Drupal\Core\Entity\EntityForm') && $entity = $form_object->getEntity()) {
     foreach (\Drupal\Core\Render\Element::children($form) as $field) {
@@ -24,10 +27,14 @@ function _field_help_helper_add_description_contextual_links(\Drupal\Core\Entity
   $bundle = $entity->bundle();
 
   if ($field_config = \Drupal\field\Entity\FieldConfig::loadByName($type, $bundle, $field_name)) {
-    $build = array(
-      'description_text' => array('#markup' => $description_text),
-      'link' => array('#markup' => '<a href="/">Edit field help text</a>'),
-    );
+    $build = [
+      'description_text' => ['#markup' => $description_text . '<br />'],
+      'edit' => [
+        '#type' => 'link',
+        '#title' => t('Edit help text'),
+        '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['query' => ['destination' => \Drupal::service('path.current')->getPath()]]),
+      ],
+    ];
   }
 
   return $build;
