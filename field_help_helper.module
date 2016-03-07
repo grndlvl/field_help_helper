@@ -1,17 +1,23 @@
 <?php
 
+/**
+ * Implements hook_form_alter().
+ */
 function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
   $account = \Drupal::currentUser();
   if (!$account->hasPermission('edit field help text')) {
     return;
   }
 
+  // We are only concern with entity forms.
+  // @todo: This part of the detection and adjusting the description seems a bit
+  //        naughty. Maybe there is a better way?
   $form_object = $form_state->getFormObject();
   if (is_a($form_object, 'Drupal\Core\Entity\EntityForm') && $entity = $form_object->getEntity()) {
     foreach (\Drupal\Core\Render\Element::children($form) as $field) {
       if(is_array($form[$field]['widget'])) {
         foreach (\Drupal\Core\Render\Element::children($form[$field]['widget']) as $delta) {
-          if (isset($form[$field]['widget'][$delta]['#description']) && $build = _field_help_helper_add_description_contextual_links($entity, $field, $form[$field]['widget'][$delta]['#description'])) {
+          if (isset($form[$field]['widget'][$delta]['#description']) && $build = _field_help_helper_get_description_with_edit_link($entity, $field, $form[$field]['widget'][$delta]['#description'])) {
             $form[$field]['widget'][$delta]['#description'] = $build;
           }
         }
@@ -20,12 +26,16 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
   }
 }
 
-function _field_help_helper_add_description_contextual_links(\Drupal\Core\Entity\EntityInterface $entity, $field_name, $description_text) {
+/**
+ * Retrieve the field help edit link build array.
+ */
+function _field_help_helper_get_description_with_edit_link(\Drupal\Core\Entity\EntityInterface $entity, $field_name, $description_text) {
   $build = array();
 
   $type = $entity->getEntityTypeId();
   $bundle = $entity->bundle();
 
+  // We are only concerned with configurable fields.
   if ($field_config = \Drupal\field\Entity\FieldConfig::loadByName($type, $bundle, $field_name)) {
     $build = [
       'description_text' => ['#markup' => $description_text . '<br />'],

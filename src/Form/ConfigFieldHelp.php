@@ -7,10 +7,7 @@
 
 namespace Drupal\field_help_helper\Form;
 
-use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Core\Field\FieldFilteredMarkup;
-use Drupal\Component\Serialization\Yaml;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\FieldConfigInterface;
@@ -25,6 +22,9 @@ use Drupal\Core\Entity\EntityStorageInterface;
  */
 class ConfigFieldHelp extends FormBase {
 
+  /**
+   * @var \Drupal\field\FieldConfigInterface
+   */
   protected $fieldConfigStorage;
 
   /**
