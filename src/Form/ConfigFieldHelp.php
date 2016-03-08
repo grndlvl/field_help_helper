@@ -65,13 +65,20 @@ class ConfigFieldHelp extends FormBase {
     }
 
     $form['#entity'] =  $field_config;
+
+    $form['label'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Label'),
+      '#default_value' => $field_config->getLabel() ?: $field_config->getName(),
+      '#required' => TRUE,
+    );
+
     $form['description'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Help text'),
       '#default_value' => $field_config->getDescription(),
       '#rows' => 5,
       '#description' => $this->t('Instructions to present to the user below this field on the editing form.<br />Allowed HTML tags: @tags', array('@tags' => FieldFilteredMarkup::displayAllowedTags())) . '<br />' . $this->t('This field supports tokens.'),
-      '#weight' => -10,
     );
 
     $form['actions'] = array('#type' => 'actions');
@@ -112,6 +119,7 @@ class ConfigFieldHelp extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $field_config = $form['#entity'];
+    $field_config->setLabel($form_state->getValue('label'));
     $field_config->setDescription($form_state->getValue('description'));
     $field_config->save();
     $form_state->setRedirectUrl($this->getCancelLinkUrl());
