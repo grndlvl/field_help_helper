@@ -10,7 +10,8 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
   }
 
   $form_object = $form_state->getFormObject();
-  if (is_a($form_object, 'Drupal\Core\Entity\EntityForm') && $entity = $form_object->getEntity()) {
+  $entity = is_a($form_object, 'Drupal\Core\Entity\EntityForm') ? $form_object->getEntity() : NULL;
+  if (!empty($entity) && is_a($entity, 'Drupal\Core\Entity\FieldableEntityInterface')) {
     $entity_field_manager = \Drupal::service('entity_field.manager');
 
     $all_fields = $entity_field_manager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
