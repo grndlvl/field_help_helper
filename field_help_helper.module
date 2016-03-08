@@ -9,18 +9,16 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
     return;
   }
 
-  // We are only concern with entity forms.
-  // @todo: This part of the detection and adjusting the description seems a bit
-  //        naughty. Maybe there is a better way?
   $form_object = $form_state->getFormObject();
   if (is_a($form_object, 'Drupal\Core\Entity\EntityForm') && $entity = $form_object->getEntity()) {
-    foreach (\Drupal\Core\Render\Element::children($form) as $field) {
-      if(is_array($form[$field]['widget'])) {
-        foreach (\Drupal\Core\Render\Element::children($form[$field]['widget']) as $delta) {
-          if (isset($form[$field]['widget'][$delta]['#description']) && $build = _field_help_helper_get_description_with_edit_link($entity, $field, $form[$field]['widget'][$delta]['#description'])) {
-            $form[$field]['widget'][$delta]['#description'] = $build;
-          }
-        }
+    $entity_field_manager = \Drupal::service('entity_field.manager');
+
+    $all_fields = $entity_field_manager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+    $base_fields = $entity_field_manager->getBaseFieldDefinitions($entity->getEntityTypeId());
+
+    foreach ($all_fields as $field_name => $field) {
+      if (!array_key_exists($field_name, $base_fields)) {
+        $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($field);
       }
     }
   }
@@ -29,17 +27,12 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
 /**
  * Retrieve the field help edit link build array.
  */
-function _field_help_helper_get_description_with_edit_link(\Drupal\Core\Entity\EntityInterface $entity, $field_name, $description_text) {
+function _field_help_helper_get_description_with_edit_link(\Drupal\field\FieldConfigInterface $field_config) {
   $build = array();
 
-  $type = $entity->getEntityTypeId();
-  $bundle = $entity->bundle();
-
-  // We are only concerned with configurable fields.
-  if ($field_config = \Drupal\field\Entity\FieldConfig::loadByName($type, $bundle, $field_name)) {
+  if (!empty($field_config)) {
     $build = [
-      'description_text' => ['#markup' => $description_text . '<br />'],
-      'edit' => [
+      'field_help_helper_link' => [
         '#type' => 'link',
         '#title' => t('Edit help text'),
         '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['query' => ['destination' => \Drupal::service('path.current')->getPath()]]),
