@@ -3,13 +3,13 @@
  * JavaScript file for the Coffee module.
  */
 
-(function ($, Drupal, drupalSettings, styles) {
+(function ($, Drupal, drupalSettings, context) {
 
   Drupal.behaviors.field_help_helper = {
     attach: function () {
-      var $formWrapper = $('.form-wrapper');
-      var $helperLink = $('a[data-drupal-selector="edit-field-help-helper-link"]');
-      var $description = $('.description');
+      var $formWrapper = $('.form-wrapper', context);
+      var $helperLink = $('a[data-drupal-selector="edit-field-help-helper-link"]', context);
+      var $description = $('.description', context);
 
       $formWrapper.each(function(){
         if ($(this).find($description).length) {
