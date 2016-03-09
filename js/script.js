@@ -9,10 +9,18 @@
 
   Drupal.behaviors.field_help_helper = {
     attach: function (context) {
-      $('a[data-drupal-selector="edit-field-help-helper-link"]', context).each(function () {
-        $(this).on('mouseover mouseout', function() {
-          $('.description', $(this).parent()).toggleClass('hovered');
-        });
+      var $edit_links = $('a[data-drupal-selector="edit-field-help-helper-link"]', context);
+      var help_text_selector = '.description';
+      var hover_class = 'hovered';
+
+      $edit_links.each(function () {
+        $(this)
+          .on('mouseover', function() {
+            $(help_text_selector, $(this).parent()).addClass(hover_class);
+          })
+          .on('mouseout', function() {
+            $(help_text_selector, $(this).parent()).removeClass(hover_class);
+          });
       });
     }
   }
