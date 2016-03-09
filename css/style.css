@@ -1,0 +1,19 @@
+.form-item .description {
+  padding: .5em .5em 0 .5em;
+  font-style: italic;
+  border: 1px dotted transparent;
+}
+.form-item .description.hovered {
+  border: 1px dotted #bbb;
+}
+a[data-drupal-selector="edit-field-help-helper-link"] {
+  padding: 0 0 0 1.8em;
+  margin: 0 0 1em .5em;
+  display: inline-block;
+  clear: both;
+  background: url('/core/themes/stable/images/core/icons/787878/pencil.svg') no-repeat left 2px;
+}
+a[data-drupal-selector="edit-field-help-helper-link"]:hover,
+a[data-drupal-selector="edit-field-help-helper-link"]:focus {
+  text-decoration: underline;
+}

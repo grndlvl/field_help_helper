@@ -8,7 +8,7 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
   if (!$account->hasPermission('edit field help text')) {
     return;
   }
-
+  $form['#attached']['library'][] = 'field_help_helper/styles';
   $form_object = $form_state->getFormObject();
   $entity = is_a($form_object, 'Drupal\Core\Entity\EntityForm') ? $form_object->getEntity() : NULL;
   if (!empty($entity) && is_a($entity, 'Drupal\Core\Entity\FieldableEntityInterface')) {
