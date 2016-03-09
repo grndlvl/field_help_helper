@@ -3,24 +3,24 @@
  * JavaScript file for the Coffee module.
  */
 
-(function ($, Drupal, drupalSettings, context) {
+(function ($, Drupal, drupalSettings) {
+
+  'use strict';
 
   Drupal.behaviors.field_help_helper = {
-    attach: function () {
-      var $formWrapper = $('.form-wrapper', context);
-      var $helperLink = $('a[data-drupal-selector="edit-field-help-helper-link"]', context);
-      var $description = $('.description', context);
+    attach: function (context) {
+      var $edit_links = $('a[data-drupal-selector="edit-field-help-helper-link"]', context);
+      var help_text_selector = '.description';
+      var hover_class = 'hovered';
 
-      $formWrapper.each(function(){
-        if ($(this).find($description).length) {
-          $(this)
-            .find($helperLink)
-            .on('mouseover', function(){
-              $(this).parent($formWrapper).find($description).addClass('hovered');
-            }).on('mouseout', function(){
-              $(this).parent($formWrapper).find($description).removeClass('hovered');
-            });
-        }
+      $edit_links.each(function () {
+        $(this)
+          .on('mouseover', function() {
+            $(help_text_selector, $(this).parent()).addClass(hover_class);
+          })
+          .on('mouseout', function() {
+            $(help_text_selector, $(this).parent()).removeClass(hover_class);
+          });
       });
     }
   }
