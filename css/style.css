@@ -12,17 +12,19 @@ a[data-drupal-selector="edit-field-help-helper-link"] {
   clear: both;
   position: relative;
   font-style: normal;
+  min-width: 30px;
 }
 a[data-drupal-selector="edit-field-help-helper-link"] span {
     position: absolute;
-    left: -30px;
-    top: 20px;
+    left: 30px;
+    top: 0px;
     width: 100px;
     text-indent: -9999px;
 }
 a[data-drupal-selector="edit-field-help-helper-link"] i.helper {
   position: relative;
   top: -3px;
+  padding-right: 5px;
 }
 a[data-drupal-selector="edit-field-help-helper-link"] i.helper:before {
   content: '';
