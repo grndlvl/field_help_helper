@@ -1,0 +1,145 @@
+<?php
+
+/**
+ * @file
+ * Field help helper main module file.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function field_help_helper_menu() {
+  return array(
+    'field-help-helper/%/edit' => array(
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('field_help_helper_config_field_help_form', 1),
+      // @todo: Change permission.
+      'access arguments' => array('access content'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function field_help_helper_admin_paths() {
+  return array(
+    'field-help-helper/*/edit' => TRUE,
+  );
+}
+
+function field_help_helper_config_field_help_form($form, &$form_state, $field_id) {
+  $form = array();
+
+  $field_config = field_help_helper_load_field_config($field_id);
+  if (empty($field_config)) {
+    drupal_not_found();
+    exit;
+  }
+
+  $form['#entity'] =  $field_config;
+  $form['label'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Label'),
+    '#default_value' => $field_config['label'],
+    '#required' => TRUE,
+  );
+
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Help text'),
+    '#default_value' => $field_config['description'],
+    '#rows' => 5,
+    '#description' => '',
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  $form['actions']['cancel'] = array(
+    '#type' => 'link',
+    '#title' => t('Cancel'),
+    '#href' => '',
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function field_help_helper_form_alter(&$form, $form_state, $form_id) {
+  // @todo: Add user access check.
+
+  if (!empty($form['#entity_type']) && !empty($form['#entity']) && $wrapper = entity_metadata_wrapper($form['#entity_type'], $form['#entity'])) {
+    foreach (field_help_helper_get_fields($wrapper) as $field_name => $field) {
+      $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($wrapper, $field_name);
+    }
+  }
+}
+
+function field_help_helper_get_fields(EntityMetadataWrapper $wrapper) {
+  return array_filter($wrapper->getPropertyInfo(), function ($value) {
+    return isset($value['field']) ? $value['field'] : FALSE;
+  });
+}
+
+/**
+ * Retrieve the field help edit link build array.
+ */
+function _field_help_helper_get_description_with_edit_link(EntityMetadataWrapper $wrapper, $field) {
+  $build = array();
+
+  if ($field_id = field_help_helper_generate_field_id($wrapper, $field)) {
+    $build = [
+      'field_help_helper_link' => [
+        '#type' => 'link',
+        '#title' => t('Edit help text'),
+        '#href' => "/field-help-helper/$field_id/edit",
+      ],
+    ];
+  }
+
+  return $build;
+}
+
+function field_help_helper_generate_field_id(EntityMetadataWrapper $wrapper, $field) {
+  $field_id = array();
+
+  // Maybe there are non-EntityDrupalWrapper wrappers that will come make it
+  // here?
+  if (is_a($wrapper, 'EntityDrupalWrapper')) {
+    $field_id = array($wrapper->type(), $wrapper->getBundle(), $field);
+  }
+
+  return implode('.', $field_id);
+}
+
+function field_help_helper_load_field_config($field_id) {
+  $field_config = array();
+  module_load_include('inc', 'field', 'field.info');
+
+  $parsed_field_id = field_help_helper_parse_field_id($field_id);
+  if (!empty($parsed_field_id)) {
+    $field_config = field_info_instance($parsed_field_id['entity_type'], $parsed_field_id['field_name'], $parsed_field_id['bundle']);
+  }
+
+  return !empty($field_config) ? $field_config : array();
+}
+
+function field_help_helper_parse_field_id($field_id) {
+  $parsed_field_id = array();
+  list($entity_type, $bundle, $field_name) = explode('.', $field_id);
+
+  if (!empty($entity_type) && !empty($bundle) && !empty($field_name)) {
+    $parsed_field_id = array(
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+      'field_name' => $field_name,
+    );
+  }
+
+  return $parsed_field_id;
+}

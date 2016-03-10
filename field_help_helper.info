@@ -1,0 +1,3 @@
+name = Field help helper
+description = Adds ability for non-content type administrators to edit field help text with a contextual link.
+core = 7.x
