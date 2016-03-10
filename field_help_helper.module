@@ -13,8 +13,7 @@ function field_help_helper_menu() {
     'field-help-helper/%/edit' => array(
       'page callback' => 'drupal_get_form',
       'page arguments' => array('field_help_helper_config_field_help_form', 1),
-      // @todo: Change permission.
-      'access arguments' => array('access content'),
+      'access arguments' => array('edit field help text'),
     ),
   );
 }
@@ -28,6 +27,41 @@ function field_help_helper_admin_paths() {
   );
 }
 
+/**
+ * Implements hook_permission().
+ */
+function field_help_helper_permission() {
+  return array(
+    'edit field help text' => array(
+      'title' => t('Edit field help text'),
+      'description' => t('Edit the help text for entity configurable fields.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_library().
+ */
+function field_help_helper_library() {
+  $module_path = drupal_get_path('module', 'field_help_helper');
+
+  return array(
+    'styles' => array(
+      'title' => 'Field help helper: Styles',
+      'version' => '1.0',
+      'js' => array(
+        $module_path . '/js/script.js' => array(),
+      ),
+      'css' => array(
+        $module_path . '/css/style.css' => array(),
+      ),
+    ),
+  );
+}
+
+/**
+ * Form callback for the field help configuration form.
+ */
 function field_help_helper_config_field_help_form($form, &$form_state, $field_id) {
   $form = array();
 
@@ -58,28 +92,61 @@ function field_help_helper_config_field_help_form($form, &$form_state, $field_id
     '#type' => 'submit',
     '#value' => t('Save'),
   );
+
+  $destination = drupal_get_destination();
   $form['actions']['cancel'] = array(
     '#type' => 'link',
     '#title' => t('Cancel'),
-    '#href' => '',
+    '#href' => $destination['destination'],
   );
 
   return $form;
 }
 
 /**
- * Implements hook_form_alter().
+ * Submit handler for the field help configuration form.
  */
-function field_help_helper_form_alter(&$form, $form_state, $form_id) {
-  // @todo: Add user access check.
+function field_help_helper_config_field_help_form_submit($form, &$form_state) {
+  $field_config = !empty($form['#entity']) ? $form['#entity'] : NULL;
 
-  if (!empty($form['#entity_type']) && !empty($form['#entity']) && $wrapper = entity_metadata_wrapper($form['#entity_type'], $form['#entity'])) {
-    foreach (field_help_helper_get_fields($wrapper) as $field_name => $field) {
-      $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($wrapper, $field_name);
+  if (!empty($field_config) && $field_config = field_info_instance($field_config['entity_type'], $field_config['field_name'], $field_config['bundle'])) {
+    $field_config['label'] = $form_state['values']['label'];
+    $field_config['description'] = $form_state['values']['description'];
+
+    try {
+      field_update_instance($field_config);
+    }
+    catch (Exception $e) {
+      form_set_error('', $e->getMessage());
     }
   }
 }
 
+/**
+ * Implements hook_form_alter().
+ */
+function field_help_helper_form_alter(&$form, $form_state, $form_id) {
+  if (!user_access('edit field help text')) {
+    return;
+  }
+
+  $form['#attached']['library'][] = array('field_help_helper', 'styles');
+  if (!empty($form['#entity_type']) && !empty($form['#entity']) && $wrapper = entity_metadata_wrapper($form['#entity_type'], $form['#entity'])) {
+    foreach (field_help_helper_get_fields($wrapper) as $field_name => $field) {
+      $form[$field_name]['field_help_helper'] = _field_help_helper_build_description_with_edit_link($wrapper, $field_name);
+    }
+  }
+}
+
+/**
+ * Get the configurable fields for a given entity.
+ *
+ * @param EntityMetadataWrapper $wrapper
+ *   The EMW of the entity for which to retrieve the configurable fields.
+ *
+ * @return array
+ *    Returns an array of configurable fields for the specified entity.
+ */
 function field_help_helper_get_fields(EntityMetadataWrapper $wrapper) {
   return array_filter($wrapper->getPropertyInfo(), function ($value) {
     return isset($value['field']) ? $value['field'] : FALSE;
@@ -88,16 +155,31 @@ function field_help_helper_get_fields(EntityMetadataWrapper $wrapper) {
 
 /**
  * Retrieve the field help edit link build array.
+ *
+ * @param EntityMetadataWrapper $wrapper
+ *   The EMW of the entity for which to generate the field help helper link.
+ * @param string $field
+ *   The field name for which to generate the edit link.
+ *
+ * @return array
+ *   Returns a Drupal render array for the field help helper link.
  */
-function _field_help_helper_get_description_with_edit_link(EntityMetadataWrapper $wrapper, $field) {
+function _field_help_helper_build_description_with_edit_link(EntityMetadataWrapper $wrapper, $field) {
   $build = array();
 
   if ($field_id = field_help_helper_generate_field_id($wrapper, $field)) {
     $build = [
-      'field_help_helper_link' => [
+      'link' => [
         '#type' => 'link',
-        '#title' => t('Edit help text'),
+        '#title' => '<i class="helper"></i><span>' . t('Edit help text') . '</span>',
         '#href' => "/field-help-helper/$field_id/edit",
+        '#options' => array(
+          'html' => TRUE,
+          'attributes' => array(
+            'class' => array('field-help-helper-link')
+          ),
+          'query' => array('destination' => current_path())
+        ),
       ],
     ];
   }
@@ -105,6 +187,19 @@ function _field_help_helper_get_description_with_edit_link(EntityMetadataWrapper
   return $build;
 }
 
+/**
+ * Generate and retrieve a sudo field id that contains information necessary
+ * for retrieving a field instnace and is easy to use.
+ *   Example: entity_type.bundle.field_name => node.page.body
+ *
+ * @param EntityMetadataWrapper $wrapper
+ *   The EMW of the entity for which to generate a field id.
+ * @param string $field
+ *   The field name for which to generate the field id.
+ *
+ * @return string
+ *   Returns a string that represents the sudo field id.
+ */
 function field_help_helper_generate_field_id(EntityMetadataWrapper $wrapper, $field) {
   $field_id = array();
 
@@ -117,6 +212,19 @@ function field_help_helper_generate_field_id(EntityMetadataWrapper $wrapper, $fi
   return implode('.', $field_id);
 }
 
+/**
+ * Load and retrieve the field configuration instance given a sudo field id.
+ *
+ * @param string $field_id
+ *   The sudo field id that contains information necessary to retrieve a field
+ *   instance.
+ *     Example: entity.bundle.field_name => node.page.body
+ *
+ * @return array
+ *   Returns the field config instance as supplied by field_info_instance().
+ *
+ * @see field_info_instance().
+ */
 function field_help_helper_load_field_config($field_id) {
   $field_config = array();
   module_load_include('inc', 'field', 'field.info');
@@ -129,6 +237,20 @@ function field_help_helper_load_field_config($field_id) {
   return !empty($field_config) ? $field_config : array();
 }
 
+/**
+ * Parse the field id into an array that defines the entity_type, bundle, and
+ * field_name of the supplied field_id.
+ *
+ * @param string $field_id
+ *   The sudo field id that contains information necessary to retrieve a field
+ *   instance.
+ *     Example: entity.bundle.field_name => node.page.body
+ *
+ * @return array
+ *   Returns an array that represents the entity_type, bundle, and field_name
+ *   of the specified field_id.
+ *     Example: array('entity_type' => 'node', 'bundle' => 'page', 'field_name' => body)
+ */
 function field_help_helper_parse_field_id($field_id) {
   $parsed_field_id = array();
   list($entity_type, $bundle, $field_name) = explode('.', $field_id);
