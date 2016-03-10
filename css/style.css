@@ -16,10 +16,13 @@ a[data-drupal-selector="edit-field-help-helper-link"] {
 }
 a[data-drupal-selector="edit-field-help-helper-link"] span {
     position: absolute;
-    left: 30px;
-    top: 0px;
-    width: 100px;
+    left: 18px;
+    top: -2px;
+    min-width: 90px;
     text-indent: -9999px;
+    padding-left: 10px;
+    z-index: 1;
+
 }
 a[data-drupal-selector="edit-field-help-helper-link"] i.helper {
   position: relative;
@@ -34,10 +37,15 @@ a[data-drupal-selector="edit-field-help-helper-link"] i.helper:before {
   position: absolute;
   border-radius: 50%;
   border: 1px solid transparent;
+  z-index: 2;
 }
 a[data-drupal-selector="edit-field-help-helper-link"]:hover span,
 a[data-drupal-selector="edit-field-help-helper-link"]:focus span {
   text-indent: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-left: 0;
+  border-radius: 0 3px 3px 0;
 }
 a[data-drupal-selector="edit-field-help-helper-link"]:hover i:before,
 a[data-drupal-selector="edit-field-help-helper-link"]:focus i:before {
