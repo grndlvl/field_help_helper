@@ -8,21 +8,35 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
   if (!$account->hasPermission('edit field help text')) {
     return;
   }
+
   $form['#attached']['library'][] = 'field_help_helper/styles';
   $form_object = $form_state->getFormObject();
   $entity = is_a($form_object, 'Drupal\Core\Entity\EntityForm') ? $form_object->getEntity() : NULL;
   if (!empty($entity) && is_a($entity, 'Drupal\Core\Entity\FieldableEntityInterface')) {
-    $entity_field_manager = \Drupal::service('entity_field.manager');
-
-    $all_fields = $entity_field_manager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
-    $base_fields = $entity_field_manager->getBaseFieldDefinitions($entity->getEntityTypeId());
-
-    foreach ($all_fields as $field_name => $field) {
-      if (!array_key_exists($field_name, $base_fields)) {
-        $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($field);
-      }
+    foreach (field_help_helper_get_fields($entity) as $field_name => $field) {
+      $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($field);
     }
   }
+}
+
+/**
+ * Get the configurable fields for a given entity.
+ *
+ * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+ *   The fieldable entity object of the entity for which to retrieve the configurable fields.
+ *
+ * @return array
+ *    Returns an array of configurable fields for the specified entity.
+ */
+function field_help_helper_get_fields(\Drupal\Core\Entity\FieldableEntityInterface $entity) {
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+
+  $all_fields = $entity_field_manager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+  $base_fields = $entity_field_manager->getBaseFieldDefinitions($entity->getEntityTypeId());
+
+  return array_filter($all_fields, function($field) use ($base_fields) {
+    return (!array_key_exists($field->getName(), $base_fields));
+  });
 }
 
 /**
