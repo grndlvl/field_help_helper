@@ -60,6 +60,22 @@ function field_help_helper_library() {
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function field_help_helper_form_alter(&$form, $form_state, $form_id) {
+  if (!user_access('edit field help text')) {
+    return;
+  }
+
+  $form['#attached']['library'][] = array('field_help_helper', 'styles');
+  if (!empty($form['#entity_type']) && !empty($form['#entity']) && $wrapper = entity_metadata_wrapper($form['#entity_type'], $form['#entity'])) {
+    foreach (field_help_helper_get_fields($wrapper) as $field_name => $field) {
+      $form[$field_name]['field_help_helper'] = _field_help_helper_build_description_with_edit_link($wrapper, $field_name);
+    }
+  }
+}
+
+/**
  * Form callback for the field help configuration form.
  */
 function field_help_helper_config_field_help_form($form, &$form_state, $field_id) {
@@ -118,22 +134,6 @@ function field_help_helper_config_field_help_form_submit($form, &$form_state) {
     }
     catch (Exception $e) {
       form_set_error('', $e->getMessage());
-    }
-  }
-}
-
-/**
- * Implements hook_form_alter().
- */
-function field_help_helper_form_alter(&$form, $form_state, $form_id) {
-  if (!user_access('edit field help text')) {
-    return;
-  }
-
-  $form['#attached']['library'][] = array('field_help_helper', 'styles');
-  if (!empty($form['#entity_type']) && !empty($form['#entity']) && $wrapper = entity_metadata_wrapper($form['#entity_type'], $form['#entity'])) {
-    foreach (field_help_helper_get_fields($wrapper) as $field_name => $field) {
-      $form[$field_name]['field_help_helper'] = _field_help_helper_build_description_with_edit_link($wrapper, $field_name);
     }
   }
 }
