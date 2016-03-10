@@ -35,7 +35,7 @@ function _field_help_helper_get_description_with_edit_link(\Drupal\field\FieldCo
     $build = [
       'field_help_helper_link' => [
         '#type' => 'link',
-        '#title' => t('<i class="helper"></i><span>Edit help text</span>'),
+        '#title' => '<i class="helper"></i><span>' . t('Edit help text') . '</span>',
         '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['query' => ['destination' => \Drupal::service('path.current')->getPath()]]),
       ],
     ];
