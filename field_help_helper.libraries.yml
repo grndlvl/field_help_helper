@@ -5,3 +5,5 @@ styles:
       css/style.css: {}
   js:
     js/script.js: {}
+  dependencies:
+    - text/drupal.text
