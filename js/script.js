@@ -10,12 +10,16 @@
   Drupal.behaviors.field_help_helper = {
     attach: function (context) {
       var $edit_links = $('a.field-help-helper-link', context);
+      var $help_text;
       var help_text_selector = '.description';
 
       $edit_links.each(function () {
-        $(this)
-          .once()
-          .appendTo(help_text_selector)
+        $help_text = $(this).parent().find(help_text_selector);
+        if ($help_text.is(':visible')) {
+          $(this)
+            .once('field-help-helper-link')
+            .appendTo($help_text);
+        }
       });
     }
   }

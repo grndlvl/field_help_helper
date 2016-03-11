@@ -100,8 +100,21 @@ function field_help_helper_config_field_help_form($form, &$form_state, $field_id
     '#title' => t('Help text'),
     '#default_value' => $field_config['description'],
     '#rows' => 5,
-    '#description' => '',
+    '#description' => t('Instructions to present to the user below this field on the editing form.<br />Allowed HTML tags: @tags', array('@tags' => _field_filter_xss_display_allowed_tags())),
   );
+
+  if (module_exists('token')) {
+    // Note that the description is tokenized via token_field_widget_form_alter().
+    $form['description']['#description'] .= '<br />' . t('This field supports tokens.');
+    $form['description']['#element_validate'][] = 'token_element_validate';
+    $form['description'] += array('#token_types' => array());
+
+    $form['token_tree'] = array(
+      '#theme' => 'token_tree',
+      '#token_types' => array(),
+      '#dialog' => TRUE,
+    );
+  }
 
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
@@ -133,7 +146,7 @@ function field_help_helper_config_field_help_form_submit($form, &$form_state) {
       field_update_instance($field_config);
     }
     catch (Exception $e) {
-      form_set_error('', $e->getMessage());
+      drupal_set_message($e->getMessage(), 'error');
     }
   }
 }
@@ -176,9 +189,9 @@ function _field_help_helper_build_description_with_edit_link(EntityMetadataWrapp
         '#options' => array(
           'html' => TRUE,
           'attributes' => array(
-            'class' => array('field-help-helper-link')
+            'class' => array('field-help-helper-link'),
+            'target' => '_blank',
           ),
-          'query' => array('destination' => current_path())
         ),
       ],
     ];
