@@ -53,7 +53,10 @@ function field_help_helper_library() {
         $module_path . '/js/script.js' => array(),
       ),
       'css' => array(
-        $module_path . '/css/style.css' => array(),
+        $module_path . '/css/fhh_style.css' => array(
+          'type' => 'file',
+          'media' => 'screen',
+        ),
       ),
     ),
   );
