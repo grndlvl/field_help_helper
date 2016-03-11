@@ -14,11 +14,11 @@
       var help_text_selector = '.description';
 
       $edit_links.each(function () {
-        $help_text = $(this).parent().find(help_text_selector).is(':visible');
-        if ($help_text.length > 0) {
+        $help_text = $(this).parent().find(help_text_selector);
+        if ($help_text.is(':visible')) {
           $(this)
             .once('field-help-helper-link')
-            .appendTo($(this).parent().find(help_text_selector));
+            .appendTo($help_text);
         }
       });
     }
