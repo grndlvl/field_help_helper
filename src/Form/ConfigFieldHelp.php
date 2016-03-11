@@ -13,7 +13,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\FieldConfigInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\UrlHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 
@@ -21,6 +23,11 @@ use Drupal\Core\Entity\EntityStorageInterface;
  * Edit config variable form.
  */
 class ConfigFieldHelp extends FormBase {
+
+  /**
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
 
   /**
    * @var \Drupal\field\FieldConfigInterface
@@ -32,8 +39,11 @@ class ConfigFieldHelp extends FormBase {
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
+   * @param \Drupal\field\FieldConfigInterface $entity_manager
+   *   The entity manager.
    */
-  public function __construct(EntityStorageInterface $fieldConfigStorage) {
+  public function __construct(EntityManager $entityManager, EntityStorageInterface $fieldConfigStorage) {
+    $this->entityManager = $entityManager;
     $this->fieldConfigStorage = $fieldConfigStorage;
   }
 
@@ -42,6 +52,7 @@ class ConfigFieldHelp extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('entity.manager'),
       $container->get('entity.manager')->getStorage('field_config')
     );
   }
@@ -65,6 +76,21 @@ class ConfigFieldHelp extends FormBase {
     }
 
     $form['#entity'] =  $field_config;
+    $bundles = $this->entityManager->getBundleInfo($field_config->getTargetEntityTypeId());
+
+    $form_title = $this->t('%field help text for %bundle', array(
+      '%field' => $field_config->getLabel(),
+      '%bundle' => $bundles[$field_config->getTargetBundle()]['label'],
+    ));
+    $form['#title'] = $form_title;
+
+    if ($field_config->getFieldStorageDefinition()->isLocked()) {
+      $form['locked'] = array(
+        '#markup' => $this->t('The field %field is locked and cannot be edited.', array('%field' => $this->entity->getLabel())),
+      );
+
+      return $form;
+    }
 
     $form['label'] = array(
       '#type' => 'textfield',
@@ -108,7 +134,7 @@ class ConfigFieldHelp extends FormBase {
       $url = Url::fromUserInput($query->get('destination'));
     }
     else {
-      $url = Url::fromRoute('<front>');
+      $url = Url::fromUserInput($this->getRequest()->getPathInfo(), ['query' => UrlHelper::filterQueryParameters($this->getRequest()->query->all(), ['q'])]);
     }
 
     return $url;
@@ -118,11 +144,21 @@ class ConfigFieldHelp extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $field_config = $form['#entity'];
-    $field_config->setLabel($form_state->getValue('label'));
-    $field_config->setDescription($form_state->getValue('description'));
-    $field_config->save();
-    $form_state->setRedirectUrl($this->getCancelLinkUrl());
+    if ($field_config = $this->fieldConfigStorage->load($form['#entity']->id())) {
+      try {
+        $field_config->setLabel($form_state->getValue('label'));
+        $field_config->setDescription($form_state->getValue('description'));
+
+        $field_config->save();
+        drupal_set_message($this->t('Saved %label configuration.', array('%label' => $field_config->getLabel())));
+      }
+      catch (EntityStorageException $e) {
+        drupal_set_message($this->t('Unable save %label configuration.', array('%label' => $field_config->getLabel())), 'error');
+      }
+    }
+    else {
+      drupal_set_message($this->t('Unable to load %label configuration.', array('%label' => $field_config->getLabel())), 'error');
+    }
   }
 
 }

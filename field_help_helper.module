@@ -11,8 +11,8 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
 
   $form['#attached']['library'][] = 'field_help_helper/styles';
   $form_object = $form_state->getFormObject();
-  $entity = is_a($form_object, 'Drupal\Core\Entity\EntityForm') ? $form_object->getEntity() : NULL;
-  if (!empty($entity) && is_a($entity, 'Drupal\Core\Entity\FieldableEntityInterface')) {
+  $entity = ($form_object instanceof Drupal\Core\Entity\EntityForm) ? $form_object->getEntity() : NULL;
+  if (!empty($entity) && ($entity instanceof Drupal\Core\Entity\FieldableEntityInterface)) {
     foreach (field_help_helper_get_fields($entity) as $field_name => $field) {
       $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($field);
     }
@@ -50,7 +50,7 @@ function _field_help_helper_get_description_with_edit_link(\Drupal\field\FieldCo
       'field_help_helper_link' => [
         '#type' => 'link',
         '#title' => \Drupal\Core\Render\Markup::create('<i class="helper"></i><span>' . t('Edit help text') . '</span>'),
-        '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['query' => ['destination' => \Drupal::service('path.current')->getPath()]]),
+        '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['attributes' => ['target' => '_blank']]),
       ],
     ];
   }

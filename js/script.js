@@ -15,7 +15,7 @@
       $edit_links.each(function () {
         $(this)
           .once('field-help-helper-link')
-          .appendTo($(this).parent().find(help_text_selector))
+          .appendTo($(this).parent().find(help_text_selector));
       });
     }
   }
