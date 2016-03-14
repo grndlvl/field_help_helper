@@ -50,7 +50,8 @@ function field_help_helper_library() {
       'title' => 'Field help helper: Styles',
       'version' => '1.0',
       'js' => array(
-        $module_path . '/js/script.js' => array(),
+        // We want ours to come after Drupal's Field text.js.
+        $module_path . '/js/script.js' => array('scope' => 'footer'),
       ),
       'css' => array(
         $module_path . '/css/fhh_style.css' => array(
