@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines simple link field types.
+ * The main module file for Field help helper.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
