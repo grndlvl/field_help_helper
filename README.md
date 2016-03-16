@@ -9,7 +9,7 @@ for a field in context of where the field displays.
 
 ### Installation
 
-Install per normal https://www.drupal.org/documentation/install/modules-themes/modules-8.
+Install per normal https://www.drupal.org/documentation/install/modules-themes/modules-7.
 
 ### Configuration
 
