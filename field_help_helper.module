@@ -6,6 +6,24 @@
  */
 
 /**
+ * Implements hook_help().
+ */
+function field_help_helper_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#field_help_helper':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Field help helper module adds a link to entity configurable fields so that users with the appropriate permissions may easily edit the help text and label for a field in context of where the field displays.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Editing help text and label') . '</dt>';
+      $output .= '<dd>' . t("Once a user's role is given the <em>Edit field help text</em> permission any user with that permission will be able to edit the help text or label of a configurable field without having access to administer fields.") . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function field_help_helper_menu() {
