@@ -1,9 +1,40 @@
 <?php
 
 /**
+ * @file
+ * Defines simple link field types.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\field\FieldConfigInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function field_help_helper_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.field_help_helper':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Field help helper module adds a link to entity configurable fields so that users with the appropriate permissions may easily edit the help text and label for a field in context of where the field displays.') . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Editing help text and label') . '</dt>';
+      $output .= '<dd>' . t("Once a user's role is given the <em>Edit field help text</em> permission any user with that permission will be able to edit the help text or label of a configurable field without having access to administer fields.") . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
  * Implements hook_form_alter().
  */
-function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function field_help_helper_form_alter(&$form, FormStateInterface $form_state) {
   $account = \Drupal::currentUser();
   if (!$account->hasPermission('edit field help text')) {
     return;
@@ -11,8 +42,8 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
 
   $form['#attached']['library'][] = 'field_help_helper/styles';
   $form_object = $form_state->getFormObject();
-  $entity = ($form_object instanceof Drupal\Core\Entity\EntityForm) ? $form_object->getEntity() : NULL;
-  if (!empty($entity) && ($entity instanceof Drupal\Core\Entity\FieldableEntityInterface)) {
+  $entity = ($form_object instanceof EntityForm) ? $form_object->getEntity() : NULL;
+  if (!empty($entity) && ($entity instanceof FieldableEntityInterface)) {
     foreach (field_help_helper_get_fields($entity) as $field_name => $field) {
       $form[$field_name]['field_help_helper'] = _field_help_helper_get_description_with_edit_link($field);
     }
@@ -28,7 +59,7 @@ function field_help_helper_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
  * @return array
  *    Returns an array of configurable fields for the specified entity.
  */
-function field_help_helper_get_fields(\Drupal\Core\Entity\FieldableEntityInterface $entity) {
+function field_help_helper_get_fields(FieldableEntityInterface $entity) {
   $entity_field_manager = \Drupal::service('entity_field.manager');
 
   $all_fields = $entity_field_manager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
@@ -42,15 +73,15 @@ function field_help_helper_get_fields(\Drupal\Core\Entity\FieldableEntityInterfa
 /**
  * Retrieve the field help edit link build array.
  */
-function _field_help_helper_get_description_with_edit_link(\Drupal\field\FieldConfigInterface $field_config) {
+function _field_help_helper_get_description_with_edit_link(FieldConfigInterface $field_config) {
   $build = array();
 
   if (!empty($field_config)) {
     $build = [
       'field_help_helper_link' => [
         '#type' => 'link',
-        '#title' => \Drupal\Core\Render\Markup::create('<i class="helper"></i><span>' . t('Edit help text') . '</span>'),
-        '#url' => \Drupal\Core\Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['attributes' => ['target' => '_blank']]),
+        '#title' => Markup::create('<i class="helper"></i><span>' . t('Edit help text') . '</span>'),
+        '#url' => Url::fromRoute('field_help_helper.form_edit_field_help', ['field_id' => $field_config->id()], ['attributes' => ['target' => '_blank']]),
       ],
     ];
   }

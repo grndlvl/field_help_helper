@@ -7,17 +7,17 @@
 
 namespace Drupal\field_help_helper\Form;
 
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\FieldConfigInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\field\FieldConfigInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Edit config variable form.
@@ -42,7 +42,7 @@ class ConfigFieldHelp extends FormBase {
    * @param \Drupal\field\FieldConfigInterface $entity_manager
    *   The entity manager.
    */
-  public function __construct(EntityManager $entityManager, EntityStorageInterface $fieldConfigStorage) {
+  public function __construct(EntityManagerInterface $entityManager, EntityStorageInterface $fieldConfigStorage) {
     $this->entityManager = $entityManager;
     $this->fieldConfigStorage = $fieldConfigStorage;
   }
